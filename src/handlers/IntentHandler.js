@@ -1,20 +1,26 @@
-const serverService = require('../services/serverService');
+const HealthCheckHandler = require('./HealthCheckHandler');
 
-const response = (text, endSession = true) => ({
+const response = (text) => ({
   version: '1.0',
   response: {
     outputSpeech: { type: 'PlainText', text },
-    shouldEndSession: endSession,
+    shouldEndSession: false,
   },
 });
+
+const INTENTS = {
+  SaudeIntent: HealthCheckHandler,
+};
 
 module.exports = {
   handle: async (event) => {
     const intentName = event?.request?.intent?.name;
-    const slots = event?.request?.intent?.slots ?? {};
+    const handler = INTENTS[intentName];
 
-    const result = await serverService.sendCommand({ intent: intentName, slots });
+    if (!handler) {
+      return response(`Desculpe, não entendi o comando "${intentName}". Tente novamente.`);
+    }
 
-    return response(result.message ?? 'Comando executado com sucesso.');
+    return handler.handle(event);
   },
 };

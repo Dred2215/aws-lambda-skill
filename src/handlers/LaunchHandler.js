@@ -1,4 +1,4 @@
-const response = (text) => ({
+﻿const response = (text) => ({
   version: '1.0',
   response: {
     outputSpeech: { type: 'PlainText', text },
@@ -6,8 +6,8 @@ const response = (text) => ({
   },
 });
 
+const SAUDACAO = 'Ola! Eu sou o Nery Automa, seu assistente. Aqui estao os comandos disponiveis: Diga como voce esta para verificar a saude do sistema. Como posso te ajudar?';
+
 module.exports = {
-  handle: async (event) => {
-    return response('Olá! Como posso te ajudar?');
-  },
+  handle: async () => response(SAUDACAO),
 };
