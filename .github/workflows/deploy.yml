@@ -3,16 +3,12 @@ name: Deploy para AWS Lambda
 on:
   push:
     branches:
-      - main
       - dev
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    env:
-      FUNCTION_NAME: ${{ github.ref_name == 'main' && 'alexa-skill-handler' || 'alexa-skill-handler-dev' }}
-      VPS_URL: ${{ github.ref_name == 'main' && secrets.VPS_URL_PROD || secrets.VPS_URL_DEV }}
 
     steps:
       - name: Checkout do código
@@ -31,14 +27,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: us-east-1
 
-      - name: Deploy na Lambda (${{ github.ref_name }})
+      - name: Deploy na Lambda
         run: |
           aws lambda update-function-code \
-            --function-name $FUNCTION_NAME \
+            --function-name ${{ github.ref_name == 'main' && 'alexa-skill-handler' || 'alexa-skill-handler-dev' }} \
             --zip-file fileb://function.zip
 
-      - name: Atualizar variável VPS_URL
+      - name: Atualizar VPS_URL na Lambda
         run: |
           aws lambda update-function-configuration \
-            --function-name $FUNCTION_NAME \
-            --environment "Variables={VPS_URL=$VPS_URL}"
+            --function-name ${{ github.ref_name == 'main' && 'alexa-skill-handler' || 'alexa-skill-handler-dev' }} \
+            --environment "Variables={VPS_URL=${{ github.ref_name == 'main' && secrets.VPS_URL_PROD || secrets.VPS_URL_DEV }}}"
