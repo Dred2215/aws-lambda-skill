@@ -1,0 +1,12 @@
+{
+  "name": "alexa-skill-handler",
+  "version": "1.0.0",
+  "description": "Alexa Skill Lambda Handler",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node -e \"require('./src/index.js')\""
+  },
+  "dependencies": {
+    "axios": "^1.7.0"
+  }
+}
