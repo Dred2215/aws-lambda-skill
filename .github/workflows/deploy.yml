@@ -14,8 +14,19 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
 
+      - name: Definir variáveis por ambiente
+        id: vars
+        run: |
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            echo "function_name=alexa-skill-handler" >> $GITHUB_OUTPUT
+            echo "vps_url=${{ secrets.VPS_URL_PROD }}" >> $GITHUB_OUTPUT
+          else
+            echo "function_name=alexa-skill-handler-dev" >> $GITHUB_OUTPUT
+            echo "vps_url=${{ secrets.VPS_URL_DEV }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Instalar dependências
-        run: npm install --production
+        run: npm install --omit=dev
 
       - name: Empacotar função
         run: zip -r function.zip src/ node_modules/ package.json
@@ -27,14 +38,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: us-east-1
 
-      - name: Deploy na Lambda
+      - name: Deploy na Lambda (${{ steps.vars.outputs.function_name }})
         run: |
           aws lambda update-function-code \
-            --function-name ${{ github.ref_name == 'main' && 'alexa-skill-handler' || 'alexa-skill-handler-dev' }} \
+            --function-name ${{ steps.vars.outputs.function_name }} \
             --zip-file fileb://function.zip
 
       - name: Atualizar VPS_URL na Lambda
         run: |
           aws lambda update-function-configuration \
-            --function-name ${{ github.ref_name == 'main' && 'alexa-skill-handler' || 'alexa-skill-handler-dev' }} \
-            --environment "Variables={VPS_URL=${{ github.ref_name == 'main' && secrets.VPS_URL_PROD || secrets.VPS_URL_DEV }}}"
+            --function-name ${{ steps.vars.outputs.function_name }} \
+            --environment "Variables={VPS_URL=${{ steps.vars.outputs.vps_url }}}"
